@@ -186,8 +186,7 @@ DC::clear_stack ()
 {
 	for (dc_node n : stack){
 		p_visit<void>(n.value, FreeVar(*this));
-		dc_array_free(n.array);
-	}
+    }
 	stack.clear();
 }
 
@@ -263,7 +262,6 @@ DC::register_set (
 	int regid ,
 	dc_data value )
 {
-
     regid = regmap(regid);
     std::list<dc_node>& r = registers[regid];
 	if ( r.empty() )
@@ -289,7 +287,6 @@ DC::pop (
 		throw DC_Exc("Empty Stack");
 	}
 	*result = stack.front().value;
-	dc_array_free(stack.front().array);
     stack.pop_front();
 	return DC_SUCCESS;
 }
@@ -310,7 +307,7 @@ DC::register_pop (
 		throw DC_Exc("Empty Register");
 	}
 	*result = registers[stackid].front().value;
-	dc_array_free(registers[stackid].front().array);
+
 	registers[stackid].pop_front();
 	return DC_SUCCESS;
 }
@@ -367,7 +364,7 @@ DC::printall (
 
 
 /* get the current array head for the named array */
-struct dc_array *
+std::shared_ptr<dc_array>
 DC::get_stacked_array (
 	int array_id )
 {
@@ -379,7 +376,7 @@ DC::get_stacked_array (
 void
 DC::set_stacked_array (
 	int array_id ,
-	struct dc_array *new_head )
+	std::shared_ptr<dc_array> new_head )
 {
 	array_id = regmap(array_id);
 	std::list<dc_node>& r = registers[array_id];

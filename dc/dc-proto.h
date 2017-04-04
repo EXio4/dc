@@ -27,6 +27,7 @@
 
 #include "dc-regdef.h"
 #include "number.h"
+#include <map>
 #include <list>
 #include <ostream>
 #include <functional>
@@ -52,12 +53,8 @@ typedef enum {
 
 
 /* what's most useful: quick access or sparse arrays? */
-/* I'll go with sparse arrays for now */
-struct dc_array {
-	int Index;
-	dc_data value;
-	struct dc_array *next;
-};
+/* I'll go with sparse arrays for now (ie, map) */
+using dc_array = std::map<int, dc_data>;
 
 
 
@@ -71,11 +68,11 @@ typedef struct dc_list dc_list;*/
 
 struct dc_node {
     dc_data value;
-    dc_array* array;
+    std::shared_ptr<dc_array> array;
     dc_node() {
         array = NULL;
     }
-    dc_node(dc_data value, dc_array* array) : value(value), array(array) {};
+    dc_node(dc_data value, std::shared_ptr<dc_array> array) : value(value), array(array) {};
 };
 
 extern void memfail (void);
@@ -133,11 +130,10 @@ public:
 	const char *dc_str2charp (dc_str);
 	const char *system (const char *);
 	void *malloc (size_t);
-	struct dc_array *get_stacked_array (int);
+	std::shared_ptr<dc_array> get_stacked_array (int);
 
 	void dc_array_set (int, int, dc_data);
-	void dc_array_free (struct dc_array *);
-	   
+	dc_data dc_array_get ( int, int);
 			
 	void binop (std::function<int( dc_num, dc_num, int, dc_num&)>, int);
 	void binop2 (std::function<int( dc_num, dc_num, int, dc_num&, dc_num&)>, int);
@@ -155,7 +151,7 @@ public:
 	void push (dc_data);
 	void register_push (int, dc_data);
 	void register_set (int, dc_data);
-	void set_stacked_array (int, struct dc_array *);
+	void set_stacked_array (int, std::shared_ptr<dc_array>);
 	void show_id (FILE *, int, const char *);
 	void dc_string_init (void);
 
@@ -175,7 +171,6 @@ public:
 
 	size_t dc_strlen (dc_str);
 
-	dc_data dc_array_get ( int, int);
 	dc_data dup ( dc_data);
 	dc_data dup_num (dc_num);
 	dc_data dup_str (dc_str);

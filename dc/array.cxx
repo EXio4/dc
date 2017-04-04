@@ -50,28 +50,9 @@ DC::dc_array_set (
 	int Index ,
 	dc_data value )
 {
-	struct dc_array *cur;
-	struct dc_array *prev=NULL;
-	struct dc_array *newentry;
 
-	cur = get_stacked_array(array_id);
-	while (cur && cur->Index < Index){
-		prev = cur;
-		cur = cur->next;
-	}
-	if (cur && cur->Index == Index){
-		p_visit<void>(cur->value, FreeVar(*this));
-		cur->value = value;
-	}else{
-		newentry = new dc_array;
-		newentry->Index = Index;
-		newentry->value = value;
-		newentry->next = cur;
-		if (prev)
-			prev->next = newentry;
-		else
-			set_stacked_array(array_id, newentry);
-	}
+	std::shared_ptr<dc_array> cur = get_stacked_array(array_id);
+    (*cur)[Index] = value;
 }
 
 /* retrieve a dup of a value from array_id[Index] */
@@ -82,26 +63,12 @@ DC::dc_array_get (
 	int array_id ,
 	int Index )
 {
-	struct dc_array *cur;
+    std::shared_ptr<dc_array> cur = get_stacked_array(array_id);
 
-	for (cur=get_stacked_array(array_id); cur; cur=cur->next)
-		if (cur->Index == Index)
-			return dup(cur->value);
-	return int2data(0);
-}
-
-/* free an array chain */
-void
-DC::dc_array_free (
-	
-	struct dc_array *a_head )
-{
-	struct dc_array *cur;
-	struct dc_array *next;
-
-	for (cur=a_head; cur; cur=next) {
-		next = cur->next;
-		p_visit<void>(cur->value, FreeVar(*this));
-		delete cur;
-	}
+    auto x = cur->find(Index);
+    if (x != cur->end()) {
+        return dup(x->second);
+    } else {
+        return int2data(0);
+    }
 }
