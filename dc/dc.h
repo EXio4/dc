@@ -146,7 +146,6 @@ using dc_data = boost::variant<UNINITIALIZED, dc_num, dc_str>;
 
 template <typename R, typename F1, typename F2>
 inline R p_match(dc_data d, F1&& f1, F2&& f2) {
-	std::cout << "pmatch" << std::endl;
 	return match(d, [f1](dc_num num)  -> R { return f1(num); },
 					[f2](dc_str str)  -> R { return f2(str); },
 					[](UNINITIALIZED) -> R { throw DC_Exc("Trying to use uninitialized value");
@@ -155,7 +154,6 @@ inline R p_match(dc_data d, F1&& f1, F2&& f2) {
 
 template <typename R, typename Vis>
 R p_visit(dc_data d, Vis&& vis) {
-	std::cout << "pvisit" << std::endl;
 	return boost::apply_visitor(vis, d);
 }
 
@@ -166,7 +164,6 @@ inline T dc_dget(dc_data d);
 
 template <>
 inline dc_str dc_dget(dc_data d) {
-	std::cout << "getting str" << std::endl;
 	return match(d, [](dc_str x)      -> dc_str { return x; },
 				    [](dc_num)        -> dc_str { throw DC_Exc("Type Error, expected string, got number");; },
 			  	    [](UNINITIALIZED) -> dc_str { throw DC_Exc("Type Error, expected string, got unitiliazed value"); });
@@ -175,7 +172,6 @@ inline dc_str dc_dget(dc_data d) {
 
 template <>
 inline dc_num dc_dget(dc_data d) {
-	std::cout << "getting num" << std::endl;
 	return match(d, [](dc_num x)   -> dc_num { return x; },
 				 [](dc_str)        -> dc_num { throw DC_Exc("Type Error, expected number, got string");; },
 				 [](UNINITIALIZED) -> dc_num { throw DC_Exc("Type Error, expected number, got unitiliazed value"); });

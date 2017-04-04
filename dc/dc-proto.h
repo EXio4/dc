@@ -27,6 +27,7 @@
 
 #include "dc-regdef.h"
 #include "number.h"
+#include <list>
 #include <ostream>
 #include <functional>
 
@@ -61,13 +62,21 @@ struct dc_array {
 
 
 /* simple linked-list implementaion suffices: */
-struct dc_list {
+/*struct dc_list {
 	dc_data value;
-	struct dc_array *array;	/* opaque */
+	struct dc_array *array;	// opaque
 	struct dc_list *link;
 };
-typedef struct dc_list dc_list;
+typedef struct dc_list dc_list;*/
 
+struct dc_node {
+    dc_data value;
+    dc_array* array;
+    dc_node() {
+        array = NULL;
+    }
+    dc_node(dc_data value, dc_array* array) : value(value), array(array) {};
+};
 
 extern void memfail (void);
 extern void out_of_memory();
@@ -103,12 +112,12 @@ private:
 	/* Since we have a need for two characters of pushback, and
 	* ungetc() only guarantees one, we place the second pushback here
 	*/
-	int input_pushback;
-	dc_list *stack=NULL;
-	dc_list *registers[DC_REGCOUNT];
+    int input_pushback;
+
+	std::list<dc_node> stack;
+	std::list<dc_node> registers[DC_REGCOUNT];
 	int eval_and_free_str(int&, dc_data);
 	dc_status func(int&, int, int, int);
-	dc_list* alloc();
 	int input_fil();
 	int input_str();
 	void register_init (void);

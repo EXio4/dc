@@ -18,6 +18,11 @@ int main (int argc, char *argv[]) {
 	//host = "irc.subluminal.net";
 	//ch = "#programming";
 
+    if (argc >= 3) {
+        host = argv[1];
+        ch = argv[2];
+    }
+
 	
 	IrcClient irc(host, port, nick);
 	

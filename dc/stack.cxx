@@ -39,18 +39,6 @@
 
 #include "visitors.h"
 
-/* allocate a new dc_list item */
-dc_list *
-DC::alloc DC_DECLVOID()
-{
-	dc_list *result;
-	
-	result = new dc_list;
-	result->array = NULL;
-	result->link = NULL;
-	return result;
-}
-
 
 /* check that there are two numbers on top of the stack,
  * then call op with the popped numbers.  Construct a dc_data
@@ -190,26 +178,17 @@ DC::triop (
 void
 DC::register_init DC_DECLVOID()
 {
-	int i;
-
-	for (i=0; i<DC_REGCOUNT; ++i)
-		registers[i] = NULL;
 }
 
 /* clear the evaluation stack */
 void
 DC::clear_stack ()
 {
-	dc_list *n;
-	dc_list *t;
-
-	for (n=stack; n; n=t){
-		t = n->link;
-		p_visit<void>(n->value, FreeVar(*this));
-		dc_array_free(n->array);
-		free(n);
+	for (dc_node n : stack){
+		p_visit<void>(n.value, FreeVar(*this));
+		dc_array_free(n.array);
 	}
-	stack = NULL;
+	stack.clear();
 }
 
 /* push a value onto the evaluation stack */
@@ -218,10 +197,9 @@ DC::push (
 	
 	dc_data value )
 {
-	dc_list *n = alloc();
-	n->value = value;
-	n->link = stack;
-	stack = n;
+    dc_node s;
+    s.value = value;
+    stack.push_front(s);
 }
 
 /* push a value onto the named register stack */
@@ -230,12 +208,11 @@ DC::register_push (
 	int stackid ,
 	dc_data value )
 {
-	dc_list *n = alloc();
+	dc_node s;
 
 	stackid = regmap(stackid);
-	n->value = value;
-	n->link = registers[stackid];
-	registers[stackid] = n;
+    s.value = value;
+	registers[stackid].push_front(s);
 }
 
 /* set *result to the value on the top of the evaluation stack */
@@ -250,10 +227,10 @@ DC::top_of_stack (
 	
 	dc_data *result )
 {
-	if (!stack){
+	if (stack.empty()){
 		throw DC_Exc("Empty Stack");
 	}
-	*result = stack->value;
+	*result = stack.front().value;
 	return DC_SUCCESS;
 }
 
@@ -268,14 +245,11 @@ DC::register_get (
 	int regid ,
 	dc_data *result )
 {
-	dc_list *r;
-
 	regid = regmap(regid);
-	r = registers[regid];
-	if ( ! r ){
+	if (registers[regid].empty()){
 		throw DC_Exc("Empty Register");
 	}
-	*result = dup(r->value);
+	*result = dup(registers[regid].front().value);
 	return DC_SUCCESS;
 }
 
@@ -289,17 +263,16 @@ DC::register_set (
 	int regid ,
 	dc_data value )
 {
-	dc_list *r;
 
-	regid = regmap(regid);
-	r = registers[regid];
-	if ( ! r )
-		registers[regid] = alloc();
+    regid = regmap(regid);
+    std::list<dc_node>& r = registers[regid];
+	if ( r.empty() )
+		r.push_front(dc_node());
 	else {
-		p_visit<void>(r->value, FreeVar(*this));
+		p_visit<void>(r.front().value, FreeVar(*this));
 
 	}
-	registers[regid]->value = value;
+	r.front().value = value;
 }
 
 /* pop from the evaluation stack
@@ -312,16 +285,12 @@ DC::pop (
 	
 	dc_data *result )
 {
-	dc_list *r;
-
-	r = stack;
-	if (!r){
+	if (stack.empty()){
 		throw DC_Exc("Empty Stack");
 	}
-	*result = r->value;
-	stack = r->link;
-	dc_array_free(r->array);
-	delete r;
+	*result = stack.front().value;
+	dc_array_free(stack.front().array);
+    stack.pop_front();
 	return DC_SUCCESS;
 }
 
@@ -336,17 +305,13 @@ DC::register_pop (
 	int stackid ,
 	dc_data *result )
 {
-	dc_list *r;
-
 	stackid = regmap(stackid);
-	r = registers[stackid];
-	if (!r){
+	if (registers[stackid].empty()){
 		throw DC_Exc("Empty Register");
 	}
-	*result = r->value;
-	registers[stackid] = r->link;
-	dc_array_free(r->array);
-	free(r);
+	*result = registers[stackid].front().value;
+	dc_array_free(registers[stackid].front().array);
+	registers[stackid].pop_front();
 	return DC_SUCCESS;
 }
 
@@ -355,12 +320,7 @@ DC::register_pop (
 int
 DC::tell_stackdepth DC_DECLVOID()
 {
-	dc_list *n;
-	int depth=0;
-
-	for (n=stack; n; n=n->link)
-		++depth;
-	return depth;
+	return stack.size();
 }
 
 
@@ -399,10 +359,8 @@ DC::printall (
 	
 	int obase )
 {
-	dc_list *n;
-
-	for (n=stack; n; n=n->link)
-		print(n->value, obase, DC_WITHNL, DC_KEEP);
+	for (dc_node n : stack)
+		print(n.value, obase, DC_WITHNL, DC_KEEP);
 }
 
 
@@ -413,8 +371,8 @@ struct dc_array *
 DC::get_stacked_array (
 	int array_id )
 {
-	dc_list *r = registers[regmap(array_id)];
-	return r ? r->array : NULL;
+	std::list<dc_node>& r = registers[regmap(array_id)];
+	return r.empty() ? NULL : r.front().array;
 }
 
 /* set the current array head for the named array */
@@ -423,11 +381,9 @@ DC::set_stacked_array (
 	int array_id ,
 	struct dc_array *new_head )
 {
-	dc_list *r;
-
 	array_id = regmap(array_id);
-	r = registers[array_id];
-	if ( ! r )
-		r = registers[array_id] = alloc();
-	r->array = new_head;
+	std::list<dc_node>& r = registers[array_id];
+	if ( r.empty() )
+		r.push_front(dc_node());
+	r.front().array = new_head;
 }
