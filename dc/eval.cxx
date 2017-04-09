@@ -43,24 +43,20 @@
 
 
 /* passed as an argument to getnum */
-int
-DC::input_fil DC_DECLVOID()
-{
-	if (input_pushback != EOF){
-		int c = input_pushback;
-		input_pushback = EOF;
-		return c;
-	}
-	return getc(input_fil_fp);
+int DC::input_fil () {
+    if (input_pushback != EOF){
+        int c = input_pushback;
+        input_pushback = EOF;
+        return c;
+    }
+    return getc(input_fil_fp);
 }
 
 /* passed as an argument to getnum */
-int
-DC::input_str DC_DECLVOID()
-{
-	if (!*input_str_string)
-		return EOF;
-	return *input_str_string++;
+int DC::input_str () {
+    if (!*input_str_string)
+        return EOF;
+    return *input_str_string++;
 }
 
 
@@ -71,15 +67,14 @@ DC::input_str DC_DECLVOID()
  */
 int
 DC::eval_and_free_str (
-	
-	int& n ,
-	dc_data string )
+    int& n ,
+    dc_data string )
 {
-	dc_status status;
+    dc_status status;
 
-	status = (dc_status)evalstr(n, string);
-	p_visit<void>(string, FreeVar(*this));
-	return status;
+    status = (dc_status)evalstr(n, string);
+    p_visit<void>(string, FreeVar(*this));
+    return status;
 }
 
 
@@ -223,11 +218,10 @@ DC::func (
 			char tmps;
 			p_match<void>(datum,
 						  [this, &tmps](dc_num num) {
-							  tmps = (char) dc_num2int(num, DC_TOSS);
+							  tmps = (char) dc_num2int(num);
 						  },
 						  [this, &tmps](dc_str str) {
-							  tmps = *dc_str2charp(str);
-							  free_str(&str);							
+							  tmps = *dc_str2charp(str);					
 						  });
 			push(makestring(&tmps, 1));
 		}
@@ -248,7 +242,7 @@ DC::func (
 
 			p_match<void>(datum,
 						  [this, &tmpint](dc_num num) {
-								tmpint = dc_num2int(num, DC_TOSS);
+								tmpint = dc_num2int(num);
 						  },
 						  [](dc_str str) {});
 			if ( ! (2 <= tmpint  &&  tmpint <= DC_IBASE_MAX) )
@@ -262,7 +256,7 @@ DC::func (
 			tmpint = -1;
 			p_match<void>(datum,
 						  [this, &tmpint](dc_num num) {
-				tmpint = dc_num2int(num, DC_TOSS);
+				tmpint = dc_num2int(num);
 			},
 										  [](dc_str str) {});
 			if ( ! (tmpint >= 0) )
@@ -284,14 +278,14 @@ DC::func (
 				 * do not add a trailing newline
 				 */
 		if (pop(&datum) == DC_SUCCESS)
-			print(datum, obase, DC_NONL, DC_TOSS);
+			print(datum, obase, DC_NONL);
 		break;
 	case 'o':	/* set output base to value on top of stack */
 		if (pop(&datum) == DC_SUCCESS){
 			tmpint = 0;
 			p_match<void>(datum,
 						  [this, &tmpint](dc_num num) {
-				tmpint = dc_num2int(num, DC_TOSS);
+				tmpint = dc_num2int(num);
 			},
 										  [](dc_str str) {});
 			if ( ! (tmpint > 1) )
@@ -304,7 +298,7 @@ DC::func (
 				 * with a trailing newline
 				 */
 		if (top_of_stack(&datum) == DC_SUCCESS)
-			print(datum, obase, DC_WITHNL, DC_KEEP);
+			print(datum, obase, DC_WITHNL);
 		break;
 	case 'q':	/* quit two levels of evaluation, posibly exiting program */
 		unwind_depth = 1; /* the return below is the first level of returns */
@@ -389,10 +383,10 @@ DC::func (
 		if (pop(&datum) == DC_SUCCESS){
 			p_match<void>(datum,
 						  [this](dc_num num) {
-								dump_num(num, DC_TOSS);
+								dump_num(num);
 						  },
 						  [this](dc_str str) {
-								out_str(str, DC_NONL, DC_TOSS);
+								out_str(str, DC_NONL);
 						  });
 		}
 		break;
@@ -403,7 +397,7 @@ DC::func (
 		if (pop(&datum) == DC_SUCCESS){
 			unwind_depth = 0;
 			unwind_noexit = DC_TRUE;
-			unwind_depth = dc_num2int(dc_dget<dc_num>(datum), DC_TOSS);
+			unwind_depth = dc_num2int(dc_dget<dc_num>(datum));
 			if (unwind_depth-- > 0)
 				return DC_QUIT;
 			unwind_depth = 0;	/* paranoia */
@@ -418,7 +412,7 @@ DC::func (
 				 * backward).
 				 */
 		if (pop(&datum) == DC_SUCCESS){
-			tmpint = dc_num2int(dc_dget<dc_num>(datum), DC_TOSS);
+			tmpint = dc_num2int(dc_dget<dc_num>(datum));
 			stack_rotate(tmpint);
 		}
 		break;
@@ -433,20 +427,20 @@ DC::func (
 		return DC_EATONE;
 	case 'X':	/* replace the number on top-of-stack with its scale factor */
 		if (pop(&datum) == DC_SUCCESS){
-			tmpint = tell_scale(dc_dget<dc_num>(datum), DC_TOSS);
+			tmpint = tell_scale(dc_dget<dc_num>(datum));
 			push(int2data(tmpint));
 		}
 		break;
 	case 'Z':	/* replace the datum on the top-of-stack with its length */
 		if (pop(&datum) == DC_SUCCESS)
-			push(int2data(tell_length(datum, DC_TOSS)));
+			push(int2data(tell_length(datum)));
 		break;
 
 	case ':':	/* store into array */
 		if (peekc == EOF)
 			return DC_EOF_ERROR;
 		if (pop(&datum) == DC_SUCCESS){
-			tmpint = dc_num2int(dc_dget<dc_num>(datum), DC_TOSS);
+			tmpint = dc_num2int(dc_dget<dc_num>(datum));
 			if (pop(&datum) == DC_SUCCESS){
 				if (tmpint < 0)
 					out << "array index must be a nonnegative integer" << std::endl;
@@ -459,7 +453,7 @@ DC::func (
 		if (peekc == EOF)
 			return DC_EOF_ERROR;
 		if (pop(&datum) == DC_SUCCESS){
-			tmpint = dc_num2int(dc_dget<dc_num>(datum), DC_TOSS);
+			tmpint = dc_num2int(dc_dget<dc_num>(datum));
 			if (tmpint < 0)
 				out << "array index must be a non negative integer" << std::endl;
 			else
@@ -620,7 +614,6 @@ DC::evalfile (
 				datum = readstring(stdin, '\n', '\n');
 				dc_str str = dc_dget<dc_str>(datum);
 				(void)system(dc_str2charp(str));
-				free_str(&str);
 				peekc = getc(fp);
 			}
 			break;

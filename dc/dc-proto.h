@@ -121,7 +121,6 @@ private:
 	void dc_array_init (void);
 public:
 	DC(std::ostream& out) : out(out) {
-		dc_string_init();
 		register_init();
 		dc_array_init();
 	}
@@ -139,33 +138,31 @@ public:
 	void binop2 (std::function<int( dc_num, dc_num, int, dc_num&, dc_num&)>, int);
 	void triop (std::function<int( dc_num, dc_num, dc_num, int, dc_num&)>, int);
 	void clear_stack ();
-	void dump_num(dc_num, dc_discard);
+	void dump_num(dc_num);
 	void free_num (dc_num *);
-	void free_str (dc_str *);
 	void garbage (const char *, int);
 	
-	void out_num (dc_num, int, dc_newline, dc_discard);
-	void out_str (dc_str, dc_newline, dc_discard);
-	void print (dc_data, int, dc_newline, dc_discard);
+	void out_num (dc_num, int, dc_newline);
+	void out_str (dc_str, dc_newline);
+	void print (dc_data, int, dc_newline);
 	void printall (int);
 	void push (dc_data);
 	void register_push (int, dc_data);
 	void register_set (int, dc_data);
 	void set_stacked_array (int, std::shared_ptr<dc_array>);
 	void show_id (FILE *, int, const char *);
-	void dc_string_init (void);
 
 	int  cmpop ();
 	int  compare (dc_num, dc_num);
 	int  evalfile ( int&, FILE *);
 	int  evalstr ( int&, dc_data);
-	int  dc_num2int (dc_num, dc_discard);
+	int  dc_num2int (dc_num);
 	int  dc_numlen (dc_num);
 	int  pop ( dc_data *);
 	int  register_get ( int, dc_data *);
 	int  register_pop ( int, dc_data *);
-	int  tell_length ( dc_data, dc_discard);
-	int  tell_scale (dc_num, dc_discard);
+	int  tell_length ( dc_data);
+	int  tell_scale (dc_num);
 	int  tell_stackdepth (void);
 	int  top_of_stack ( dc_data *);
 

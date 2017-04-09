@@ -26,26 +26,10 @@
 
 #include "config.h"
 
-#include <stdio.h>
-#ifdef HAVE_STDDEF_H
-# include <stddef.h>	/* ptrdiff_t */
-#else
-# define ptrdiff_t	size_t
-#endif
-#ifdef HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
-#ifdef HAVE_STRING_H
-# include <string.h>	/* memcpy */
-#else
-# ifdef HAVE_MEMORY_H
-#  include <memory.h>	/* memcpy, maybe */
-# else
-#  ifdef HAVE_STRINGS_H
-#   include <strings.h>	/* memcpy, maybe */
-#  endif
-# endif
-#endif
+#include <cstddef>
+#include <cstdlib>
+#include <string>
+#include <memory>
 #include "dc.h"
 #include "dc-proto.h"
 
@@ -56,68 +40,30 @@
  * for the caller to not have to do the grunge work of setting
  * up a type result.
  */
-dc_data
-DC::dup_str (
-	dc_str value )
-{
-	dc_data result;
-
-	++value.s->s_refs;
-	result = value;
-	return result;
+dc_data DC::dup_str (dc_str value) {
+    return value;
 }
 
-/* free an instance of a dc_str value */
-void
-DC::free_str (
-	dc_str *value )
-{
-	struct dc_string *string = value->s;
-
-	if (--string->s_refs < 1){
-		free(string->s_ptr);
-		free(string);
-	}
-}
 
 /* Output a dc_str value.
  * Add a trailing newline if "newline" is set.
  * Free the value after use if discard_flag is set.
  */
-void
-DC::out_str (
-	dc_str value ,
-	dc_newline newline ,
-	dc_discard discard_flag )
-{
-	out << std::string(value.s->s_ptr, value.s->s_len);
+void DC::out_str (dc_str value, dc_newline newline) {
+	out << *(value.s);
 	if (newline == DC_WITHNL) {
 		out << std::endl;
 	}
-	if (discard_flag == DC_TOSS)
-		free_str(&value);
 }
 
 /* make a copy of a string (base s, length len)
  * into a dc_str value; return a dc_data result
  * with this value
  */
-dc_data
-DC::makestring (
-	const char *s ,
-	size_t len )
+dc_data DC::makestring (const char *s , size_t len )
 {
-	dc_data result;
-	struct dc_string *string;
-
-	string = (dc_string*)malloc(sizeof *string);
-	string->s_ptr = (char*)malloc(len+1);
-	memcpy(string->s_ptr, s, len);
-	string->s_ptr[len] = '\0';	/* nul terminated for those who need it */
-	string->s_len = len;
-	string->s_refs = 1;
-	result = dc_str(string);
-	return result;
+    std::shared_ptr<std::string> x = std::make_shared<std::string>(s, len);
+    return dc_str(x);
 }
 
 /* read a dc_str value from FILE *fp;
@@ -179,7 +125,7 @@ const char *
 DC::dc_str2charp (
 	dc_str value )
 {
-	return value.s->s_ptr;
+	return value.s->c_str();
 }
 
 /* return the length of the dc_str value;
@@ -191,13 +137,8 @@ size_t
 DC::dc_strlen (
 	dc_str value )
 {
-	return value.s->s_len;
+	return value.s->size();
 }
 
-
-/* initialize the strings subsystem */
-void
-DC::dc_string_init DC_DECLVOID()
-{
-	/* nothing to do for this implementation */
-}
+
+//

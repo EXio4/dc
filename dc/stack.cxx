@@ -176,7 +176,7 @@ DC::triop (
 
 /* initialize the register stacks to their initial values */
 void
-DC::register_init DC_DECLVOID()
+DC::register_init ()
 {
 }
 
@@ -315,7 +315,7 @@ DC::register_pop (
 
 /* tell how many entries are currently on the evaluation stack */
 int
-DC::tell_stackdepth DC_DECLVOID()
+DC::tell_stackdepth ()
 {
 	return stack.size();
 }
@@ -328,22 +328,15 @@ DC::tell_stackdepth DC_DECLVOID()
  * appropriate module.
  */
 int
-DC::tell_length (
-	
-	dc_data value ,
-	dc_discard discard_p )
+DC::tell_length (dc_data value )
 {
 	int length = 0;
 	p_match<void>(value,
-				  [this,&length,discard_p](dc_num n) {		
+				  [this,&length](dc_num n) {		
 					length = dc_numlen(n);
-					if (discard_p == DC_TOSS)
-						free_num(&n);
 				  },
-   			      [this,&length,discard_p](dc_str s) {		
+   			      [this,&length](dc_str s) {		
 					  length = dc_strlen(s);
-					  if (discard_p == DC_TOSS)
-						  free_str(&s);
 				  });
 	return length;
 }
@@ -357,7 +350,7 @@ DC::printall (
 	int obase )
 {
 	for (dc_node n : stack)
-		print(n.value, obase, DC_WITHNL, DC_KEEP);
+		print(n.value, obase, DC_WITHNL);
 }
 
 

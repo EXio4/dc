@@ -38,7 +38,7 @@
 
 /* initialize the arrays */
 void
-DC::dc_array_init DC_DECLVOID()
+DC::dc_array_init ()
 {
 }
 

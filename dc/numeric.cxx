@@ -236,16 +236,12 @@ DC::compare (
  * If discard_p is DC_TOSS then deallocate the value after use.
  */
 int
-DC::dc_num2int (
-	dc_num value ,
-	dc_discard discard_p )
+DC::dc_num2int (dc_num value)
 {
-	long result;
+    long result;
 
-	result = bc.num2long(CastNum(value));
-	if (discard_p == DC_TOSS)
-		free_num(&value);
-	return (int)result;
+    result = bc.num2long(CastNum(value));
+    return (int)result;
 }
 
 /* convert a C integer value into a dc_num */
@@ -370,15 +366,11 @@ DC::dc_numlen (
  * If discard_p is DC_TOSS then deallocate the value after use.
  */
 int
-DC::tell_scale (
-	dc_num value ,
-	dc_discard discard_p )
+DC::tell_scale (dc_num value)
 {
 	int kscale;
 
 	kscale = CastNum(value)->n_scale;
-	if (discard_p == DC_TOSS)
-		free_num(&value);
 	return kscale;
 }
 
@@ -387,19 +379,12 @@ DC::tell_scale (
  * if discard_p is DC_TOSS then deallocate the value after use
  */
 void
-DC::out_num (
-	
-	dc_num value ,
-	int obase ,
-	dc_newline newline_p ,
-	dc_discard discard_p )
+DC::out_num (dc_num value, int obase, dc_newline newline_p)
 {
 	std::string output;
 	bc.out_num(CastNum(value), obase, output, 0);
 	out << output;
 	if (newline_p == DC_WITHNL) { out << std::endl; }
-	if (discard_p == DC_TOSS)
-		free_num(&value);
 }
 
 /* dump out the absolute value of the integer part of a
@@ -407,10 +392,7 @@ DC::out_num (
  * if discard_p is DC_TOSS then deallocate the value after use
  */
 void
-DC::dump_num (
-	
-	dc_num dcvalue ,
-	dc_discard discard_p )
+DC::dump_num (dc_num dcvalue )
 {
 	std::string output;
 	struct digit_stack { int digit; struct digit_stack *link;};
@@ -430,8 +412,6 @@ DC::dump_num (
 	/* we only handle the absolute value: */
 	value->n_sign = PLUS;
 	/* we're done with the dcvalue parameter: */
-	if (discard_p == DC_TOSS)
-		free_num(&dcvalue);
 
 	bc.int2num(&obase, 1+UCHAR_MAX);
 	do {

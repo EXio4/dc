@@ -152,21 +152,15 @@ DC::system (
 
 
 /* print out the indicated value */
-void
-DC::print (
-	
-	dc_data value ,
-	int obase ,
-	dc_newline newline_p ,
-	dc_discard discard_p )
+void DC::print (dc_data value, int obase, dc_newline newline_p)
 {
 		
 	p_match<void>(value,
-			   [this, obase, newline_p, discard_p](dc_num n) {
-					out_num(n, obase, newline_p, discard_p);
+			   [this, obase, newline_p](dc_num n) {
+					out_num(n, obase, newline_p);
 			   },
-			   [this, obase, newline_p, discard_p](dc_str s) {
-					out_str(s, newline_p, discard_p);
+			   [this, obase, newline_p](dc_str s) {
+					out_str(s, newline_p);
 			   });
 }
 

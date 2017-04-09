@@ -16,7 +16,6 @@ public:
 		dc.free_num(&num);
 	}
 	void operator()(dc_str str) {
-		dc.free_str(&str);
 	}
 	
 };
